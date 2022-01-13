@@ -1,0 +1,8 @@
+github.com/gorilla/websocket v1.4.2 h1:+/TMaTYc4QFitKJxsQ7Yye35DkWvkdLcvGKqM+x0Ufc=
+github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
+github.com/kmcsr/go-logger v0.0.0-20211221235544-4b29eba40e2a h1:S4lORvPfD6zmZrHIsVEQQCKVQMhpb6+6qBjFxWLG4L0=
+github.com/kmcsr/go-logger v0.0.0-20211221235544-4b29eba40e2a/go.mod h1:1XB4ZW14rAogCQNcJrlSx7+2iFGg0Vwj+5Vxl/GaTEQ=
+github.com/kmcsr/go-util v0.0.0-20211221180451-f0366696ab6a h1:8Wh9IyeXKSeTDwJ5L7X4E+8vFnm0CGGoujg25ZPJoq4=
+github.com/kmcsr/go-util v0.0.0-20211221180451-f0366696ab6a/go.mod h1:FjXlGuc5IoUTWQEXj30YuEzoz8DI9uaNKPcXQSqks4Q=
+gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc/go.mod h1:m7x9LTH6d71AHyAX77c9yqWCCa3UKHcVEj9y7hAtKDk=
+gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df/go.mod h1:LRQQ+SO6ZHR7tOkpBDuZnXENFzX8qRjMDMyPD6BRkCw=
