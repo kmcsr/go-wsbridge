@@ -14,9 +14,12 @@ function _build(){
 
 GOOS=linux   GOARCH=amd64 _build server || exit $?
 GOOS=linux   GOARCH=amd64 _build client || exit $?
+GOOS=linux   GOARCH=amd64 _build proxy  || exit $?
 GOOS=darwin  GOARCH=amd64 _build server || exit $?
 GOOS=darwin  GOARCH=amd64 _build client || exit $?
+GOOS=darwin  GOARCH=amd64 _build proxy  || exit $?
 GOOS=windows GOARCH=amd64 _build server || exit $?
 GOOS=windows GOARCH=amd64 _build client || exit $?
+GOOS=windows GOARCH=amd64 _build proxy  || exit $?
 
 echo "==> Done"

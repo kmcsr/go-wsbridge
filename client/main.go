@@ -2,115 +2,47 @@
 package main
 
 import (
-	tls "crypto/tls"
-	io "io"
 	net "net"
-	http "net/http"
 	os "os"
-	time "time"
-	strings "strings"
 
-	websocket "github.com/gorilla/websocket"
 	golog "github.com/kmcsr/go-logger"
 	ufile "github.com/kmcsr/go-util/file"
 	json "github.com/kmcsr/go-util/json"
+	. "github.com/kmcsr/go-wsbridge/client/src"
 )
 
 var logger = golog.NewLogger("CLIENT")
 
 var (
-	USERNAME string = ""
-	PASSWORD string = ""
+	USER *User = nil
 	REMOTE string = ""
 	BRIDGES map[string]string = nil
 )
 
-var WsDialer *websocket.Dialer = &websocket.Dialer{
-	Proxy:            http.ProxyFromEnvironment,
-	HandshakeTimeout: 45 * time.Second,
-	TLSClientConfig: &tls.Config{
-		InsecureSkipVerify: true,
-	},
-}
-
-func init(){
-	{ // read config file
-		var fd *os.File
-		var err error
-		fd, err = os.Open(ufile.JoinPath("config", "config.json"))
-		if err != nil {
-			panic(err)
-		}
-		defer fd.Close()
-		var obj json.JsonObj
-		obj, err = json.ReadJsonObj(fd)
-		if err != nil {
-			panic(err)
-		}
-		USERNAME = obj.GetString("username")
-		PASSWORD = obj.GetString("password")
-		REMOTE = obj.GetString("remote")
-		if REMOTE[len(REMOTE) - 1] != '/' {
-			REMOTE += "/"
-		}
-		BRIDGES = obj.GetStringMap("bridges")
-	}
-}
-
-func handler(nc net.Conn, remote string){
-	defer nc.Close()
-	var (
-		header http.Header = http.Header{}
-		conn *websocket.Conn
-		t int
-		buf []byte
-		err error
-	)
-	(&http.Request{Header: header}).SetBasicAuth(USERNAME, PASSWORD)
-	conn, _, err = WsDialer.Dial(remote, header)
+func readConfig(){
+	var fd *os.File
+	var err error
+	fd, err = os.Open(ufile.JoinPath("config", "client.json"))
 	if err != nil {
-		logger.Error("Websocket connect error:", err)
-		return
+		panic(err)
 	}
-	defer conn.Close()
-	go func(){
-		defer nc.Close()
-		defer conn.Close()
-		var (
-			rb = make([]byte, 1024 * 128) // 128KB
-			n int
-			err error
-		)
-		for {
-			n, err = nc.Read(rb)
-			if err != nil {
-				if err != io.EOF {
-					logger.Error("Error on read:", err)
-				}
-				return
-			}
-			err = conn.WriteMessage(websocket.BinaryMessage, rb[:n])
-			if err != nil {
-				return
-			}
-		}
-	}()
-	for {
-		t, buf, err = conn.ReadMessage()
-		if err != nil {
-			return
-		}
-		if t == websocket.BinaryMessage {
-			_, err = nc.Write(buf)
-			if err != nil {
-				logger.Error("Error on write:", err)
-				return
-			}
-		}
+	defer fd.Close()
+	var obj json.JsonObj
+	obj, err = json.ReadJsonObj(fd)
+	if err != nil {
+		panic(err)
 	}
+	USER = NewUser(obj.GetString("username"), obj.GetString("password"))
+	REMOTE = obj.GetString("remote")
+	if REMOTE[len(REMOTE) - 1] != '/' {
+		REMOTE += "/"
+	}
+	BRIDGES = obj.GetStringMap("bridges")
 }
 
 func main(){
+	readConfig()
+
 	count := 0
 	trigger := make(chan struct{})
 	for local, remot := range BRIDGES {
@@ -122,7 +54,7 @@ func main(){
 		logger.Infof("Proxy \"%s\" to \"%s\"", local, remot)
 		count++
 		host, port := split(remot, ':', true)
-		remote := httpToWs(REMOTE + host + "/" + port)
+		remote := REMOTE + "1/" + host + "/" + port
 		go func(){
 			defer func(){
 				count--
@@ -135,22 +67,16 @@ func main(){
 			for {
 				conn, err = svr.Accept()
 				if err != nil {
+					logger.Error("Error on accept connection:", err)
 					return
 				}
-				go handler(conn, remote)
+				go USER.Handler(conn, remote)
 			}
 		}()
 	}
 	for count > 0 {
 		<-trigger
 	}
-}
-
-func httpToWs(origin string)(string){
-	if strings.HasPrefix(origin, "http") {
-		return "ws" + origin[4:]
-	}
-	return origin
 }
 
 func split(s string, b byte, last bool)(string, string){
